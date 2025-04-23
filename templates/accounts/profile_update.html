@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+
+    <style>
+
+
+        .form-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 387px;
+            position: relative;
+            top: 15px;
+            margin: auto;
+        }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            color: #333333;
+        }
+
+        .form-container input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #dddddd;
+            border-radius: 5px;
+            font-size: 1em;
+            color: black;
+        }
+
+        .form-container button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+        .form-control{
+            border: none;
+            background: #1f1f1f;
+        }
+
+
+
+        @media (min-width: 1250px) {
+            #formc {
+                width: 387px;
+                height: 227px;
+                position: relative;
+                top: 58px;
+            }
+        }
+
+        /* تنظیمات برای حالت کامپیوتر */
+        @media (min-width: 1024px) {
+            #formc {
+                width: 387px;
+                height: 265px;
+            }
+        }
+
+        /* تنظیمات برای حالت کامپیوتر */
+        @media (min-width: 768px) {
+            .form-container {
+                height: 36%;
+                width: 101%;
+            }
+        }
+
+        /* تنظیمات برای حالت موبایل */
+        @media (max-width: 767px) {
+            .form-container {
+                height: 103%;
+                width: 100%;
+            }
+        }
+    </style>
+
+
+
+    <div id="formc" style="background: #1f1f1f"
+         class="form-container rounded-2xl p-6 shadow dark:bg-black shadow-dark lg:col-span-2 lg:p-10">
+        <h2 class="mt-4 text-lg text-light dark:text-light/70">اطلاعات خود را وارد کنید</h2>
+<form method="post" action="">
+    {% csrf_token %}
+            <div   class="form-control" style="color: black">
+                {{ form.first_name }}
+                {{ form.last_name }}
+                
+            </div>
+    <button type="submit">ثبت</button>
+</form>
+    </div>
+
+{% endblock %}

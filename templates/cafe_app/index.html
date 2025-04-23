@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+	
+
+    <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="هرچی دوست داری سرچ کن...">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+
+    <div class="categories-container">
+        <div class="categories">
+            <button class="category-btn active" data-category-id="all">
+                <img src="{% static 'all.jpg' %}" alt="همه" class="category-img">
+                <span class="category-name">همه</span>
+            </button>
+            {% for category in categories %}
+                <button class="category-btn" data-category-id="{{ category.id }}">
+                    <img src="{{ category.image.url }}" alt="{{ category.name }}" class="category-img">
+                    <span class="category-name">{{ category.name }}</span>
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+<div class="menu-items" id="menu-items">
+    {% for product in products %}
+        <div class="menu-item" data-category-id="{{ product.category.id }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <div class="item-details">
+                <div class="item-name">{{ product.name }}</div>
+                <div class="item-price">{{ product.price|format_price }} تومان</div>
+                <div style="word-wrap: break-word; overflow-wrap: break-word; white-space: normal;" class="item-ingredients">
+                    {{ product.ingredients }}
+                </div>
+                <div class="d-flex justify-content-center align-items-center mt-2">
+                    <div class="d-flex align-items-center me-4">
+                        <div class="input-group input-group-sm" style="width: 80px;">
+                            <button type="button" class="btn btn-outline-secondary py-0 px-1" onclick="changeQuantity('{{ product.id }}', -1)">-</button>
+                            <input type="number" id="quantity-{{ product.id }}" name="quantity" value="{{ product.quantity|default:1 }}" min="1" max="99" class=" cart-qty form-control text-center text-white bg-dark border-secondary" style="padding: 0.2rem; font-size: 0.8rem;" readonly>
+                            <button type="button" class="btn btn-outline-secondary py-0 px-1" onclick="changeQuantity('{{ product.id }}', 1)">+</button>
+                        </div>
+                    </div>
+                    <button type="button" data-product-id="{{ product.id }}" class="btn btn-success me-2" id="add-cart">
+                        افزودن به سبد خرید
+                    </button>
+                    <button type="button" class="btn btn-outline-danger me-2">
+                        <i class="bi bi-heart"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+
+    <!-- مودال درباره ما -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('infoModal')">&times;</span>
+            <div class="modal-title">درباره ما</div>
+            <p>آدرس: {{ cafe_settings.address }}</p>
+            <p>اینستاگرام: <a href="https://www.instagram.com/{{ cafe_settings.instagram_handle }}" target="_blank">@{{ cafe_settings.instagram_handle }}</a></p>
+            <p>شماره تماس: <a href="tel:{{ cafe_settings.phone_number }}">{{ cafe_settings.phone_number }}</a></p>
+        </div>
+    </div>
+
+{% endblock %}
+    

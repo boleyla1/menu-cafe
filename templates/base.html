@@ -1,0 +1,184 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ cafe_settings.name }}</title>
+    <meta name="description" content="به {{ cafe_settings.name }} خوش آمدید - بهترین تجربه کافه در شهر! اطلاعات بیشتری درباره منو، مکان و خدمات ما پیدا کنید."> 
+    <link rel="canonical" href="https://cafethales.ir">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<style>
+    /* استایل برای جایگاه هشدار */
+    .alert-container {
+        position: fixed;
+        top: -100px; /* ابتدا مخفی باشد */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        width: 300px;
+        transition: top 0.5s ease-out, opacity 0.5s ease-out;
+        opacity: 0;
+    }
+
+    /* وقتی پیام نمایش داده می‌شود */
+    .alert-container.show {
+        top: 82px;
+        opacity: 1;
+    }
+
+    /* وقتی پیام در حال مخفی شدن است */
+    .alert-container.hide {
+        top: -100px;
+        opacity: 0;
+    }
+</style>
+<body>
+
+    <div class="header">
+
+        
+        
+        
+        <div class="cafe-name">
+            <span class="cafe-part">{{ cafe_name.part1 }}</span> <span class="tales-part">{{ cafe_name.part2 }}</span>
+        </div>
+        <div class="right-icons">
+            <button class="icon-button bg-danger" ><i class="bi bi-heart"></i></button>
+            {% if user.is_authenticated %}
+            	 <a href={% url 'profile_update' %}><button class="icon-button hamburger-menu"><i class="bi bi-person"></i></button></a>
+            {% else %}
+                <a href={% url 'OtpLogin' %}><button class="icon-button hamburger-menu"><i class="bi bi-person"></i></button></a>
+            {% endif %} 
+           <a href="{% if request.path == '/orders/' %}{% url 'home' %}{% else %}{% url 'cart' %}{% endif %}" class="icon-button position-relative">
+    {% if request.path == '/orders/' %}
+        <!-- نمایش آیکون خانه در صفحه سفارشات -->
+        <i class="bi bi-house-door"></i>
+    {% else %}
+        <!-- نمایش آیکون سبد خرید در سایر صفحات -->
+        <i class="bi bi-cart"></i>
+        {% if cart_total_quantity > 0 %}
+    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          {% if cart_total_quantity == 0 %} style="display: none;" {% endif %}>
+        {{ cart_total_quantity }}
+    </span>
+        {% endif %}
+    {% endif %}
+</a>
+
+
+        </div>
+    </div>
+            {% if messages %}
+        <div style="width: 296px; text-align: center;" id="alert-messages" class="alert-container">
+            {% for message in messages %}
+                <div style="font-size: 18px;" class="alert 
+                {% if 'success' in message.tags %}alert-success{% elif 'error' in message.tags %}alert-danger{% endif %}"
+                     role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+{% block content %}
+	
+{% endblock %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // جستجو محصولات
+            $('#search-input').on('keyup', function() {
+                var query = $(this).val().toLowerCase();
+                $('.menu-item').filter(function() {
+                    $(this).toggle($(this).find('.item-name').text().toLowerCase().indexOf(query) > -1 ||
+                                    $(this).find('.item-ingredients').text().toLowerCase().indexOf(query) > -1 ||
+                                    $(this).find('.item-price').text().toLowerCase().indexOf(query) > -1);
+                });
+            }).on('input', function () {
+                if ($(this).val().trim() === '') {
+                    $('.menu-item').show();
+                }
+            });
+
+        });
+        
+    document.addEventListener("DOMContentLoaded", function () {
+        let alertBox = document.getElementById("alert-messages");
+
+        if (alertBox) {
+            // نمایش پیام با انیمیشن
+            setTimeout(() => {
+                alertBox.classList.add("show");
+            }, 100);
+
+            setTimeout(() => {
+                alertBox.classList.add("hide");
+                setTimeout(() => alertBox.remove(), 500);
+            }, 4000);
+        }
+    });
+
+    </script>
+    <script>
+
+    function changeQuantity(productId, change) {
+    const input = document.getElementById(`quantity-${productId}`);
+    let quantity = parseInt(input.value) + change;
+
+    // مطمئن می‌شیم که تعداد از 1 کمتر نشه
+    if (quantity < 1) {
+        quantity = 1;
+    }
+
+    // آپدیت مقدار input
+    input.value = quantity;
+}
+$(document).on('click', '#add-cart', function (e) {
+    e.preventDefault();
+    var productId = $(this).data('product-id');
+    var quantity = $("#quantity-" + productId).val();
+
+    $.ajax({
+        type: 'POST',
+        url: '/cart/cart-add/',  // بررسی کن که مسیر URL در urls.py درست باشد.
+        data: {
+            product_id: productId,
+            product_qty: quantity,
+            csrfmiddlewaretoken: '{{ csrf_token }}', // دریافت CSRF از فرم مخفی
+            action: 'post'
+        },
+        dataType: "json",
+        success: function (json) {
+            console.log("Response:", json);
+            
+            // به‌روزرسانی نشانگر تعداد در سبد خرید
+            if (json.cart_total_quantity > 0) {
+                $("#cart-badge").text(json.cart_total_quantity).show();
+            } else {
+                $("#cart-badge").hide();
+            }
+
+            // تغییر تعداد نمایش داده‌شده در صفحه
+            {#$("#quantity-" + productId).val(json.new_quantity);#}
+        },
+        error: function (xhr, errmsg, err) {
+            console.log("AJAX Error:", xhr.status, errmsg);
+        }
+    });
+});
+
+
+
+</script>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

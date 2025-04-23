@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+
+
+        .form-container {
+            background-color: #1f1f1f;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 387px;
+            position: relative;
+            top: 15px;
+            margin: auto;
+        }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            color: #333333;
+        }
+
+        .form-container input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #dddddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-container button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+        
+        /* استایل برای نمایش زمان باقیمانده */
+        #timer {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        /* استایل برای لینک ارسال مجدد */
+        #resend-link {
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #resend-link:hover {
+            text-decoration: underline;
+        }
+
+        /* پیام کد به دستت نرسید؟ */
+        #resend-msg {
+            font-size: 1em;
+            color: #dc3545;
+            margin-top: 15px;
+            font-weight: bold;
+            display: none; /* در ابتدا پنهان است */
+        }
+
+        /* دکمه ارسال کد */
+        #submit-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        /* زمانی که تایمر تمام شد، این استایل اعمال می‌شود */
+        #submit-btn.hidden {
+            display: none;
+        }
+
+        /* زمانی که تایمر تمام شد، لینک ارسال مجدد نمایش داده می‌شود */
+        #resend-link {
+            display: none;
+        }
+
+        @media (min-width: 1250px) {
+            #formc {
+                width: 387px;
+                height: 227px;
+                position: relative;
+                top: 58px;
+            }
+        }
+
+        /* تنظیمات برای حالت کامپیوتر */
+        @media (min-width: 1024px) {
+            #formc {
+                width: 387px;
+                height: 227px;
+            }
+        }
+
+        /* تنظیمات برای حالت کامپیوتر */
+        @media (min-width: 768px) {
+            .form-container {
+                height: 36%;
+                width: 101%;
+            }
+        }
+
+        /* تنظیمات برای حالت موبایل */
+        @media (max-width: 767px) {
+            .form-container {
+                height: 103%;
+                width: 100%;
+            }
+        }
+        .form-control{
+            border: none;
+            background: #1f1f1f;
+        }
+    </style>
+<div id="formc" class="form-container rounded-2xl  p-6 shadow dark:bg-black dark:shadow-dark lg:col-span-2 lg:p-10">
+
+        <h2 class="mt-4 text-lg text-light dark:text-light/70">کد ارسال شده را وارد کنید</h2>
+
+<form method="post" onsubmit="convertToEnglishNumbers()">
+    {% csrf_token %}
+    <div class="form-control" style="color: black">
+        {{ form.code }}
+    </div>
+    <button type="submit">بررسی کد</button>
+
+    <div id="countdown"></div>
+
+    <!-- لینک ارسال مجدد (در ابتدا مخفی است) -->
+    <a id="resend-link" href="{% url 'resend_otp' %}?token={{ token }}">ارسال مجدد کد</a>
+</form>
+
+
+    </div>
+    
+<script>
+    function convertToEnglishNumbers(event) {
+        event.preventDefault();  // جلوگیری از ارسال فرم به صورت پیش‌فرض
+        const codeField = document.querySelector('input[name="code"]');
+        codeField.value = codeField.value.replace(/[۰-۹]/g, function(match) {
+            return String.fromCharCode(match.charCodeAt(0) - 1728);
+        });
+        event.target.submit();  // ارسال فرم پس از تبدیل اعداد
+    }
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        // زمان اولیه تایمر به ثانیه (3 دقیقه = 180 ثانیه)
+        var countdown = sessionStorage.getItem('countdown') ? parseInt(sessionStorage.getItem('countdown')) : 180;
+        var countdownElement = document.getElementById('countdown');  // المنتی که زمان را نشان می‌دهد
+        var resendLink = document.getElementById('resend-link');  // لینک ارسال مجدد
+
+        function updateCountdown() {
+            var minutes = Math.floor(countdown / 60);
+            var seconds = countdown % 60;
+
+            // نمایش زمان باقی‌مانده
+            countdownElement.textContent = `زمان باقی‌مانده: ${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+
+            // اگر زمان به پایان رسید، لینک ارسال مجدد را نمایش بده
+            if (countdown <= 0) {
+                countdownElement.textContent = 'کد به دستت نرسید؟';
+                resendLink.style.display = 'block';  // نمایش لینک ارسال مجدد
+            } else {
+                resendLink.style.display = 'none';  // مخفی کردن لینک ارسال مجدد قبل از اتمام زمان
+            }
+
+            countdown--;  // کاهش زمان تایمر
+            sessionStorage.setItem('countdown', countdown);  // ذخیره زمان باقی‌مانده در sessionStorage
+        }
+
+        // هر یک ثانیه تایمر را به‌روزرسانی کن
+        var timerInterval = setInterval(function() {
+            updateCountdown();
+            if (countdown < 0) {
+                clearInterval(timerInterval);  // قطع تایمر پس از اتمام زمان
+            }
+        }, 1000);
+
+        // بروزرسانی اولیه تایمر
+        updateCountdown();
+    });
+</script>
+    
+{% endblock %}
+
+

@@ -1,0 +1,290 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت دسته‌بندی‌ها</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+            font-family: system-ui;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .add-btn {
+            background-color: #0d6efd;
+            border: none;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-2px);
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e5e5;
+            padding-bottom: 10px;
+        }
+
+        .modal-body {
+            padding: 20px 0;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #e5e5e5;
+            padding-top: 10px;
+        }
+
+        /* استایل دکمه بازگشت در کادر */
+        .back-btn-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-btn {
+            color: #e74c3c;
+            background: none;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn i {
+            margin-left: 5px;
+        }
+
+        .back-btn:hover {
+            color: #c0392b;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- دکمه بازگشت -->
+    <div class="back-btn-container">
+        <button class="back-btn" onclick="window.history.back()">
+            <i class="fas fa-arrow-right"></i>
+            بازگشت
+        </button>
+    </div>
+
+
+    <!-- کارت افزودن دسته‌بندی -->
+    <div class="category-card">
+        <h2 class="mb-4">مدیریت دسته‌بندی‌ها</h2>
+        <form id="categoryForm" class="d-flex flex-column flex-md-row gap-3" method="POST"
+              enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="id_name" class="form-label">نام دسته‌بندی</label>
+                {{ form.name }}
+            </div>
+            <div class="mb-3">
+                <label for="id_image" class="form-label">تصویر</label>
+                {{ form.image }}
+            </div>
+            <button type="submit" class="btn btn-primary add-btn">
+                <i class="fas fa-plus ml-2"></i>
+                افزودن
+            </button>
+        </form>
+    </div>
+
+    <!-- جدول دسته‌بندی‌ها -->
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead>
+            <tr>
+                <th>شماره</th>
+                <th>نام دسته‌بندی</th>
+                <th>تصویر</th>
+                <th>عملیات</th>
+            </tr>
+            </thead>
+            <tbody id="categoryTableBody">
+            {% for category in categories %}
+                <tr id="category-{{ category.id }}">
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ category.name }}</td>
+                    <td>
+                        {% if category.image %}
+                            <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid"
+                                 style="max-width: 50px; height: auto;">
+                        {% else %}
+                            نداشتن تصویر
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-warning action-btn"
+                                onclick="openEditModal({{ category.id }}, '{{ category.name }}', '
+                                        {% if category.image %}{{ category.image.url }}{% endif %}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger action-btn" onclick="openDeleteModal({{ category.id }})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- مودال ویرایش -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>ویرایش دسته‌بندی</h2>
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editCategoryForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="editCategoryName" class="form-label">نام دسته‌بندی</label>
+                    <input type="text" class="form-control" id="editCategoryName" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="editCategoryImage" class="form-label">تصویر</label>
+                    <input type="file" class="form-control" id="editCategoryImage" name="image">
+                </div>
+                <input type="hidden" id="editCategoryId" name="id">
+                <img id="editCategoryImagePreview" class="img-fluid mb-3" style="max-width: 50px; height: auto;">
+                <button type="button" class="btn btn-primary" onclick="updateCategory()">ذخیره</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- مودال تایید حذف دسته‌بندی -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>حذف دسته‌بندی</h2>
+            <span class="close" onclick="closeModal('deleteModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>آیا از حذف این دسته‌بندی اطمینان دارید؟</p>
+        </div>
+        <form id="deleteCategoryForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">انصراف</button>
+                <button type="submit" class="btn btn-danger">حذف</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/script2.js' %}"></script>
+</body>
+</html>

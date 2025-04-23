@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ویرایش دسته‌بندی</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- کارت ویرایش دسته‌بندی -->
+        <div class="category-card">
+            <h2 class="mb-4">ویرایش دسته‌بندی</h2>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary action-btn">
+                    <i class="fas fa-save ml-2"></i>
+                    ذخیره تغییرات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
