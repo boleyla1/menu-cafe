@@ -16,9 +16,9 @@
         <div class="d-flex align-items-center me-4">
             <label class="me-2">تعداد:</label>
             <div class="input-group input-group-sm" style="width: 80px;">
-                <button type="button" class="btn btn-outline-secondary py-0 px-1 change-quantity" data-product-id="{{ product.id }}" data-change="-1">-</button>
+
                 <input type="number" id="quantity-{{ product.id }}" value="{{ quantities|get_item:product.id|default:1 }}" min="1" max="99" class="form-control text-center text-white bg-dark border-secondary" readonly>
-                <button type="button" class="btn btn-outline-secondary py-0 px-1 change-quantity" data-product-id="{{ product.id }}" data-change="1">+</button>
+
             </div>
         </div>
         <div>
@@ -31,6 +31,7 @@
     </div>
 {% endfor %}
 
+    <h1>{{ cart.total|format_price }}</h1>
 
     <div class="bg-dark p-3 rounded mt-3">
         <h5 class="text-white mb-3">ثبت آدرس</h5>
@@ -44,14 +45,7 @@
     </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-$(document).on('click', '.change-quantity', function () {
-    var productId = $(this).data('product-id');
-    var change = parseInt($(this).data('change'));
-    var input = $('#quantity-' + productId);
-    var quantity = parseInt(input.val()) + change;
-    if (quantity < 1) quantity = 1;
-    input.val(quantity);
-});
+
 
 $(document).on('click', '.delete-product', function (e) {
     e.preventDefault();

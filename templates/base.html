@@ -63,30 +63,36 @@
         <i class="bi bi-house-door"></i>
     {% else %}
         <!-- نمایش آیکون سبد خرید در سایر صفحات -->
-        <i class="bi bi-cart"></i>
-        {% if cart_total_quantity > 0 %}
-    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          {% if cart_total_quantity == 0 %} style="display: none;" {% endif %}>
+<i class="bi bi-cart"></i>
+{% if cart_total_quantity > 0 %}
+    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
         {{ cart_total_quantity }}
     </span>
-        {% endif %}
-    {% endif %}
+{% else %}
+    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">
+        0
+    </span>
+{% endif %}
+{% endif %}
 </a>
 
 
         </div>
     </div>
-            {% if messages %}
-        <div style="width: 296px; text-align: center;" id="alert-messages" class="alert-container">
-            {% for message in messages %}
-                <div style="font-size: 18px;" class="alert 
-                {% if 'success' in message.tags %}alert-success{% elif 'error' in message.tags %}alert-danger{% endif %}"
-                     role="alert">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+          {% if messages %}
+    <div id="alert-messages" class="alert-container" style="width: 296px; text-align: center;">
+        {% for message in messages %}
+            <div class="alert 
+                {% if 'success' in message.tags %}alert-success
+                {% elif 'error' in message.tags %}alert-danger
+                {% endif %}
+                " style="font-size: 18px;" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
 
 {% block content %}
 	
@@ -158,22 +164,22 @@ $(document).on('click', '#add-cart', function (e) {
         dataType: "json",
         success: function (json) {
             console.log("Response:", json);
-            
+
             // به‌روزرسانی نشانگر تعداد در سبد خرید
             if (json.cart_total_quantity > 0) {
+                // نمایش تعداد در دایره آبی
                 $("#cart-badge").text(json.cart_total_quantity).show();
             } else {
+                // مخفی کردن دایره تعداد
                 $("#cart-badge").hide();
             }
-
-            // تغییر تعداد نمایش داده‌شده در صفحه
-            {#$("#quantity-" + productId).val(json.new_quantity);#}
         },
         error: function (xhr, errmsg, err) {
             console.log("AJAX Error:", xhr.status, errmsg);
         }
     });
 });
+    
 
 
 

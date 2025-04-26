@@ -6,6 +6,7 @@ import json
 from .cart import Cart
 from cart_app.models import *
 from django.http import JsonResponse
+from django.contrib import messages
 
 
 class CartView(View):
@@ -16,25 +17,31 @@ class CartView(View):
 
         return render(request, 'cart_app/cart.html', {
             "product": product,
-            "quantities": quantities
+            "quantities": quantities,
+            'cart': cart,
+
         })
 
 
 def cartadd(request):
     cart = Cart(request)
-    if request.POST.get('action') == 'post':
+    if request.method == 'POST' and request.POST.get('action') == 'post':
         product_id = int(request.POST.get('product_id'))
-        product_qty = int(request.POST.get('product_qty'))  # اینجا مقدار quantity را درست بخوان
+        product_qty = int(request.POST.get('product_qty'))
         product = get_object_or_404(Product, id=product_id)
 
-        cart.add(product=product, quantity=product_qty)  # محصول را به سبد اضافه کن
+        # اضافه کردن محصول به سبد خرید
+        cart.add(product=product, quantity=product_qty)
 
-        # محاسبه‌ی کل تعداد محصولات در سبد خرید
+        # محاسبه تعداد کل محصولات در سبد خرید
         cart_total_quantity = sum(int(qty) for qty in cart.cart.values())
 
-        # ارسال پاسخ JSON برای آپدیت آیکون سبد خرید بدون رفرش
+        # ارسال پیام موفقیت
+        messages.success(request, f"محصول {product.name} با موفقیت به سبد خرید اضافه شد.")
+
+        # ارسال پاسخ JSON برای آپدیت آیکون سبد خرید
         response = JsonResponse({
-            'Product name': product.name,
+            'product_name': product.name,
             'cart_total_quantity': cart_total_quantity
         })
         return response
@@ -42,12 +49,22 @@ def cartadd(request):
 
 def cart_delete(request):
     cart = Cart(request)
-    if request.POST.get('action') == 'post':
+    if request.method == 'POST' and request.POST.get('action') == 'post':
         product_id = int(request.POST.get('product_id'))
+        product = get_object_or_404(Product, id=product_id)
         cart.delete(product=product_id)
-        response = JsonResponse({'product': product_id})
-        return response
 
+        # محاسبه تعداد محصولات باقی‌مانده در سبد خرید
+        cart_total_quantity = sum(int(qty) for qty in cart.cart.values())
+
+        # ارسال پیام موفقیت
+        messages.success(request, f"{product.name} با موفقیت از سبد خرید حذف شد!")
+
+        # ارسال پاسخ JSON شامل تعداد محصولات باقی‌مانده
+        response = JsonResponse({
+            'cart_total_quantity': cart_total_quantity,
+        })
+        return response
 
 ZP_API_REQUEST = 'https://api.zarinpal.com/pg/v4/payment/request.json'
 ZP_API_VERIFY = 'https://api.zarinpal.com/pg/v4/payment/verify.json'
