@@ -7,6 +7,7 @@ from .cart import Cart
 from cart_app.models import *
 from django.http import JsonResponse
 from django.contrib import messages
+from accounts.models import User
 
 
 class CartView(View):
@@ -14,11 +15,13 @@ class CartView(View):
         cart = Cart(request)
         product = cart.get_prods()
         quantities = cart.get_quants()  # دریافت مقدار تعداد محصول از سبد خرید
+        user = request.user.phone
 
         return render(request, 'cart_app/cart.html', {
             "product": product,
             "quantities": quantities,
             'cart': cart,
+            'user': user
 
         })
 
@@ -55,6 +58,7 @@ def cartadd(request):
 
 def cart_delete(request):
     cart = Cart(request)
+    user = User.objects.all()
     if request.method == 'POST' and request.POST.get('action') == 'post':
         product_id = int(request.POST.get('product_id'))
         product = get_object_or_404(Product, id=product_id)
@@ -72,7 +76,12 @@ def cart_delete(request):
         response = JsonResponse({
             'cart_total_quantity': cart_total_quantity,
             'message': f"{product.name} با موفقیت از سبد خرید حذف شد!"
+
         })
+        context = {
+            'user' : user
+        }
+
         return response
 
 ZP_API_REQUEST = 'https://api.zarinpal.com/pg/v4/payment/request.json'

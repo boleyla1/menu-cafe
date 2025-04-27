@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block content %}
-    
+
    {% for product in product %}
     <div id="product-row-{{ product.id }}" class="d-flex align-items-center border-bottom py-2 mb-2 bg-dark rounded cart-item">
         <div class="me-3">
@@ -32,18 +32,44 @@
     </div>
 {% endfor %}
 
-    <h1>{{ cart.total|format_price }}</h1>
+<h1 class="text-center">{{ cart.total|format_price }}</h1>
 
-    <div class="bg-dark p-3 rounded mt-3">
-        <h5 class="text-white mb-3">ثبت آدرس</h5>
-        <form id="address-form">
-            <div class="mb-3">
-                <label class="form-label text-white">آدرس:</label>
-                <textarea class="form-control bg-dark text-white border-secondary" id="address" rows="3" placeholder="آدرس خود را وارد کنید"></textarea>
+<div class="bg-dark p-3 rounded mt-3">
+    <h5 class="text-white mb-3">ثبت سفارش</h5>
+    <form id="address-form">
+        <!-- مبلغ کل -->
+        <div class="mb-3">
+            <label class="form-label text-white">مبلغ کل:</label>
+            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ cart.total|format_price }}" readonly>
+        </div>
+
+        <!-- شماره تلفن با دکمه تغییر -->
+        <div class="mb-3">
+            <label class="form-label text-white">شماره تلفن:</label>
+            <div class="d-flex align-items-center">
+                <input type="text" class="form-control bg-dark text-white border-secondary me-2" id="phone" value="{{ user }}" readonly>
+                <button type="button" id="edit-phone" class="btn btn-primary" style="white-space: nowrap;">تغییر تلفن</button>
             </div>
-        </form>
+        </div>
+
+        <!-- آدرس -->
+        <div class="mb-3">
+            <label class="form-label text-white">آدرس:</label>
+            <textarea class="form-control bg-dark text-white border-secondary" id="address" rows="3" placeholder="آدرس خود را وارد کنید"></textarea>
+        </div>
+
         <button type="submit" class="btn btn-success w-100">پرداخت و ثبت سفارش</button>
-    </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('edit-phone').addEventListener('click', function () {
+        const phoneInput = document.getElementById('phone');
+        phoneInput.removeAttribute('readonly');
+        phoneInput.focus();
+    });
+</script>
+
     <div id="alert-messages" class="alert-container" style="width: 296px; text-align: center;">
     <!-- پیام‌ها به صورت داینامیک اضافه خواهند شد -->
 </div>
