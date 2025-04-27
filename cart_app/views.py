@@ -30,21 +30,27 @@ def cartadd(request):
         product_qty = int(request.POST.get('product_qty'))
         product = get_object_or_404(Product, id=product_id)
 
-        # اضافه کردن محصول به سبد خرید
-        cart.add(product=product, quantity=product_qty)
+        # بررسی اینکه آیا محصول قبلاً به سبد خرید اضافه شده است
+        if str(product_id) in cart.cart:  # باید بررسی کنیم که محصول به صورت string ذخیره شده
+            response = {
+                'message': f"محصول {product.name} قبلاً به سبد خرید اضافه شده است.",
+                'error': True
+            }
+        else:
+            # اضافه کردن محصول به سبد خرید
+            cart.add(product=product, quantity=product_qty)
 
-        # محاسبه تعداد کل محصولات در سبد خرید
-        cart_total_quantity = sum(int(qty) for qty in cart.cart.values())
+            # محاسبه تعداد کل محصولات در سبد خرید
+            cart_total_quantity = sum(int(qty) for qty in cart.cart.values())
 
-        # ارسال پیام موفقیت
-        messages.success(request, f"محصول {product.name} با موفقیت به سبد خرید اضافه شد.")
+            # ارسال پیام موفقیت
+            response = {
+                'message': f"محصول {product.name} با موفقیت به سبد خرید اضافه شد.",
+                'cart_total_quantity': cart_total_quantity,
+                'error': False
+            }
 
-        # ارسال پاسخ JSON برای آپدیت آیکون سبد خرید
-        response = JsonResponse({
-            'product_name': product.name,
-            'cart_total_quantity': cart_total_quantity
-        })
-        return response
+        return JsonResponse(response)
 
 
 def cart_delete(request):
@@ -52,6 +58,8 @@ def cart_delete(request):
     if request.method == 'POST' and request.POST.get('action') == 'post':
         product_id = int(request.POST.get('product_id'))
         product = get_object_or_404(Product, id=product_id)
+
+        # حذف محصول از سبد خرید
         cart.delete(product=product_id)
 
         # محاسبه تعداد محصولات باقی‌مانده در سبد خرید
@@ -63,6 +71,7 @@ def cart_delete(request):
         # ارسال پاسخ JSON شامل تعداد محصولات باقی‌مانده
         response = JsonResponse({
             'cart_total_quantity': cart_total_quantity,
+            'message': f"{product.name} با موفقیت از سبد خرید حذف شد!"
         })
         return response
 

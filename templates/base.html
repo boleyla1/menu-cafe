@@ -16,29 +16,32 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <style>
-    /* استایل برای جایگاه هشدار */
-    .alert-container {
-        position: fixed;
-        top: -100px; /* ابتدا مخفی باشد */
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1050;
-        width: 300px;
-        transition: top 0.5s ease-out, opacity 0.5s ease-out;
-        opacity: 0;
-    }
 
-    /* وقتی پیام نمایش داده می‌شود */
-    .alert-container.show {
-        top: 82px;
-        opacity: 1;
-    }
+.alert-container {
+    position: fixed;
+    top: 20px; /* ابتدا پیام خارج از صفحه قرار دارد */
+    left: 50%;
+    transform: translateX(-50%); /* مرکز کردن */
+    z-index: 1050; /* افزایش z-index برای اطمینان از نمایش پیام */
+    width: 300px;
+    padding: 15px; /* برای داشتن فضای مناسب */
+    border-radius: 5px; /* گوشه‌های گرد */
+    transition: top 0.5s ease-out, opacity 0.5s ease-out; /* انیمیشن انتقال */
+    opacity: 1; /* پیام مخفی است */
+}
 
-    /* وقتی پیام در حال مخفی شدن است */
-    .alert-container.hide {
-        top: -100px;
-        opacity: 0;
-    }
+/* وقتی پیام نمایش داده می‌شود */
+.alert-container.show {
+    top: 20px; /* نمایش پیام در بالای صفحه */
+    opacity: 1; /* پیام کاملاً قابل مشاهده می‌شود */
+}
+
+/* وقتی پیام در حال مخفی شدن است */
+.alert-container.hide {
+    top: -100px; /* پیام از صفحه خارج می‌شود */
+    opacity: 0; /* پیام مخفی می‌شود */
+}
+
 </style>
 <body>
 
@@ -79,21 +82,25 @@
 
         </div>
     </div>
-          {% if messages %}
-    <div id="alert-messages" class="alert-container" style="width: 296px; text-align: center;">
-        {% for message in messages %}
-            <div class="alert 
-                {% if 'success' in message.tags %}alert-success
-                {% elif 'error' in message.tags %}alert-danger
-                {% endif %}
-                " style="font-size: 18px;" role="alert">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
+{#          {% if messages %}#}
+{#    <div id="alert-messages" class="alert-container" style="width: 296px; text-align: center;">#}
+{#        {% for message in messages %}#}
+{#            <div class="alert #}
+{#                {% if 'success' in message.tags %}alert-success#}
+{#                {% elif 'error' in message.tags %}alert-danger#}
+{#                {% endif %}#}
+{#                " style="font-size: 18px;" role="alert">#}
+{#                {{ message }}#}
+{#            </div>#}
+{#        {% endfor %}#}
+{#    </div>#}
+{#{% endif %}#}
 
+<div id="alert-messages" class="alert-container" style="width: 296px; text-align: center;">
+    <!-- پیام‌ها به صورت داینامیک اضافه خواهند شد -->
+</div>
 
+ 
 {% block content %}
 	
 {% endblock %}
@@ -116,21 +123,26 @@
 
         });
         
-    document.addEventListener("DOMContentLoaded", function () {
-        let alertBox = document.getElementById("alert-messages");
+document.addEventListener("DOMContentLoaded", function () {
+    let alertBox = document.getElementById("alert-messages");
 
-        if (alertBox) {
-            // نمایش پیام با انیمیشن
-            setTimeout(() => {
-                alertBox.classList.add("show");
-            }, 100);
+    if (alertBox) {
+        // نمایش پیام با انیمیشن
+        setTimeout(() => {
+            alertBox.classList.add("show");  // نمایش پیام با انیمیشن
+        }, 100);
 
+        // بعد از ۴ ثانیه پیام را محو کرده و محتوا را پاک می‌کنیم
+        setTimeout(() => {
+            alertBox.classList.add("hide");  // مخفی کردن پیام با انیمیشن
             setTimeout(() => {
-                alertBox.classList.add("hide");
-                setTimeout(() => alertBox.remove(), 500);
-            }, 4000);
-        }
-    });
+                alertBox.innerHTML = '';  // پاک کردن محتوا بدون حذف کامل از DOM
+                alertBox.classList.remove("show", "hide");  // حذف کلاس‌های انیمیشن
+            }, 500);  // مدت زمانی که پیام محو می‌شود
+        }, 4000);  // مدت زمانی که پیام نمایش داده می‌شود
+    }
+});
+
 
     </script>
     <script>
@@ -147,40 +159,85 @@
     // آپدیت مقدار input
     input.value = quantity;
 }
-$(document).on('click', '#add-cart', function (e) {
-    e.preventDefault();
-    var productId = $(this).data('product-id');
-    var quantity = $("#quantity-" + productId).val();
+document.addEventListener("DOMContentLoaded", function () {
+    const alertBox = document.getElementById("alert-messages");
 
-    $.ajax({
-        type: 'POST',
-        url: '/cart/cart-add/',  // بررسی کن که مسیر URL در urls.py درست باشد.
-        data: {
-            product_id: productId,
-            product_qty: quantity,
-            csrfmiddlewaretoken: '{{ csrf_token }}', // دریافت CSRF از فرم مخفی
-            action: 'post'
-        },
-        dataType: "json",
-        success: function (json) {
-            console.log("Response:", json);
-
-            // به‌روزرسانی نشانگر تعداد در سبد خرید
-            if (json.cart_total_quantity > 0) {
-                // نمایش تعداد در دایره آبی
-                $("#cart-badge").text(json.cart_total_quantity).show();
-            } else {
-                // مخفی کردن دایره تعداد
-                $("#cart-badge").hide();
-            }
-        },
-        error: function (xhr, errmsg, err) {
-            console.log("AJAX Error:", xhr.status, errmsg);
+    // وقتی که پیام جدید از سرور میاد
+    function showAlert(message, isError = false) {
+        // در صورتی که قبلاً پیامی نمایش داده شده باشد، آن را حذف می‌کنیم
+        const existingAlert = alertBox.querySelector(".alert");
+        if (existingAlert) {
+            existingAlert.classList.add("hide");
+            setTimeout(() => {
+                existingAlert.remove();
+            }, 500);
         }
+
+        // ایجاد یک پیام جدید
+        const newAlert = document.createElement("div");
+        newAlert.classList.add("alert");
+        newAlert.classList.add(isError ? "alert-danger" : "alert-success");
+        newAlert.style.fontSize = "18px";
+        newAlert.setAttribute("role", "alert");
+        newAlert.innerHTML = message;
+
+        // اضافه کردن به alert-messages
+        alertBox.appendChild(newAlert);
+
+        // انیمیشن برای پیام جدید (حرکت از بالا به پایین)
+        setTimeout(() => {
+            newAlert.classList.add("show");
+        }, 100);
+
+        // بعد از 3 ثانیه مخفی می‌شود
+        setTimeout(() => {
+            newAlert.classList.add("hide");
+            // بعد از محو شدن پیام، آن را از DOM حذف می‌کنیم
+            setTimeout(() => {
+                newAlert.remove();
+            }, 500);
+        }, 3000); // نمایش پیام برای 3 ثانیه
+    }
+
+    // وقتی کاربر محصول را اضافه می‌کند
+    $(document).on('click', '#add-cart', function (e) {
+        e.preventDefault();
+        var productId = $(this).data('product-id');
+        var quantity = $("#quantity-" + productId).val();
+
+        $.ajax({
+            type: 'POST',
+            url: '/cart/cart-add/',  // بررسی کن که مسیر URL در urls.py درست باشد.
+            data: {
+                product_id: productId,
+                product_qty: quantity,
+                csrfmiddlewaretoken: '{{ csrf_token }}', // دریافت CSRF از فرم مخفی
+                action: 'post'
+            },
+            dataType: "json",
+            success: function (json) {
+                console.log("Response:", json);
+
+                // اگر تعداد سبد خرید بیشتر از صفر است
+                if (json.cart_total_quantity > 0) {
+                    // نمایش تعداد در دایره آبی
+                    $("#cart-badge").text(json.cart_total_quantity).show();
+                }
+
+                // اگر تعداد سبد خرید صفر باشد، آن را مخفی می‌کنیم
+                if (json.cart_total_quantity === 0) {
+                    $("#cart-badge").hide();
+                }
+
+                // نمایش پیام موفقیت یا ارور
+                showAlert(json.message, json.error);
+            },
+            error: function (xhr, errmsg, err) {
+                console.log("AJAX Error:", xhr.status, errmsg);
+            }
+        });
     });
 });
-    
-
 
 
 </script>

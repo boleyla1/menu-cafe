@@ -3,6 +3,7 @@
 {% load static %}
 
 {% block content %}
+    
    {% for product in product %}
     <div id="product-row-{{ product.id }}" class="d-flex align-items-center border-bottom py-2 mb-2 bg-dark rounded cart-item">
         <div class="me-3">
@@ -43,6 +44,9 @@
         </form>
         <button type="submit" class="btn btn-success w-100">پرداخت و ثبت سفارش</button>
     </div>
+    <div id="alert-messages" class="alert-container" style="width: 296px; text-align: center;">
+    <!-- پیام‌ها به صورت داینامیک اضافه خواهند شد -->
+</div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
 
@@ -51,7 +55,6 @@ $(document).on('click', '.delete-product', function (e) {
     e.preventDefault();
     var button = $(this);
     var productId = button.data('product-id');
-
 
     $.ajax({
         type: 'POST',
@@ -76,12 +79,40 @@ $(document).on('click', '.delete-product', function (e) {
             } else {
                 $("#cart-badge").hide();
             }
+
+            // نمایش پیام موفقیت با انیمیشن
+            showMessage(json.message);
         },
         error: function (xhr, errmsg, err) {
             console.log("AJAX Error:", xhr.status, errmsg);
         }
     });
 });
+
+function showMessage(message) {
+    // حذف هر پیام قبلی از صفحه
+    $("#alert-messages").remove();
+
+    // ساخت یک alert جدید
+    var alertBox = $('<div id="alert-messages" class="alert-container">')
+        .append('<div class="alert alert-danger" style="font-size: 18px;" role="alert">' + message + '</div>');
+
+    // افزودن به body
+    $('body').append(alertBox);
+
+    // نمایش پیام با انیمیشن
+    setTimeout(function() {
+        alertBox.addClass("show");
+    }, 100);
+
+    // پنهان کردن پیام بعد از 3 ثانیه
+    setTimeout(function() {
+        alertBox.removeClass("show");
+        setTimeout(function() {
+            alertBox.remove();
+        }, 500);
+    }, 3000);
+}
 
 
 
