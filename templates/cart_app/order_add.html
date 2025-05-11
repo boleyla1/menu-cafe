@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="bg-dark p-4 rounded mt-4">
+
+    <h2 class="text-white mb-4 border-bottom pb-2">جزئیات سفارش</h2>
+
+    <div class="mb-3 text-white">
+        <p><strong>نام مشتری:</strong> {{ order.user.first_name }} {{ order.user.last_name }}</p>
+        <p><strong>آدرس:</strong> {{ order.address }}</p>
+        <p><strong>شماره تلفن:</strong> {{ order.phone }}</p>
+        <p><strong>مجموع قیمت:</strong> {{ order.total_price|format_price }} تومان</p>
+        <p><strong>تاریخ ایجاد:</strong> {{ order.created_at|date:"Y/m/d H:i" }}</p>
+    </div>
+
+    <h4 class="text-white mt-4 mb-3">محصولات سفارش:</h4>
+    <ul class="list-group mb-4">
+        {% for item in order.items.all %}
+            <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ item.product.name }}</strong>
+                    <span class="ms-2 text-muted">تعداد: {{ item.quantity }}</span>
+                </div>
+                <span class="text-warning">{{ item.price|format_price }} تومان</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'cart' %}" class="btn btn-outline-light">بازگشت به سبد خرید</a>
+        <a  class="btn btn-success">پرداخت</a>
+    </div>
+</div>
+{% endblock %}

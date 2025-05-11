@@ -22,6 +22,7 @@ class Cart:
                 yield {
                     'product': product,
                     'quantity': int(quantity),
+                    'price': product.price,  # اضافه کردن price
                     'total': total,
                 }
 
@@ -50,3 +51,7 @@ class Cart:
         if product_id in self.cart:
             del self.cart[product_id]
             self.session.modified = True
+
+    def clear(self):
+        self.session['cart'] = {}
+        self.session.modified = True

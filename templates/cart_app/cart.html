@@ -3,7 +3,25 @@
 {% load static %}
 
 {% block content %}
+<style>
+/* برای اینکه فاصله مناسب بین دکمه‌ها و ورودی‌ها باشه */
+.d-flex {
+    display: flex;
+    align-items: center;
+}
 
+.d-flex input {
+    flex-grow: 1;
+    margin-right: 10px; /* فاصله دکمه از فیلد ورودی */
+}
+
+.d-flex .btn {
+    white-space: nowrap; /* جلوگیری از شکستن متن دکمه */
+    height: 38px; /* اندازه دکمه‌ها */
+}
+
+</style>
+    
    {% for product in product %}
     <div id="product-row-{{ product.id }}" class="d-flex align-items-center border-bottom py-2 mb-2 bg-dark rounded cart-item">
         <div class="me-3">
@@ -32,48 +50,127 @@
     </div>
 {% endfor %}
 
-<h1 class="text-center">{{ cart.total|format_price }}</h1>
+
+
+
 
 <div class="bg-dark p-3 rounded mt-3">
-    <h5 class="text-white mb-3">ثبت سفارش</h5>
-    <form id="address-form">
-        <!-- مبلغ کل -->
-        <div class="mb-3">
-            <label class="form-label text-white">مبلغ کل:</label>
-            <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ cart.total|format_price }}" readonly>
-        </div>
 
-        <!-- شماره تلفن با دکمه تغییر -->
-        <div class="mb-3">
-            <label class="form-label text-white">شماره تلفن:</label>
-            <div class="d-flex align-items-center">
-                <input type="text" class="form-control bg-dark text-white border-secondary me-2" id="phone" value="{{ user }}" readonly>
-                <button type="button" id="edit-phone" class="btn btn-primary" style="white-space: nowrap;">تغییر تلفن</button>
-            </div>
-        </div>
 
-        <!-- آدرس -->
-        <div class="mb-3">
-            <label class="form-label text-white">آدرس:</label>
-            <textarea class="form-control bg-dark text-white border-secondary" id="address" rows="3" placeholder="آدرس خود را وارد کنید"></textarea>
+    <!-- نمایش مبلغ کل -->
+    <div class="mb-3">
+        <label class="form-label text-white">مبلغ کل:</label>
+        <input type="text" class="form-control bg-dark text-white border-secondary" value="{{ cart.total|format_price }}" readonly>
+    </div>
+    
+<form method="post" action="{% url 'order_add' %}" id="order-form">
+    {% csrf_token %}
+    
+    <!-- نام و نام خانوادگی -->
+    <div class="mb-3">
+        <label class="form-label text-white" for="full-name">نام و نام خانوادگی:</label>
+        <div class="d-flex">
+            <input type="text" name="full_name" class="form-control bg-dark text-white border-secondary me-2 w-75"
+                   value="{{ request.user.first_name }} {{ request.user.last_name }}" readonly id="full-name">
         </div>
+    </div>
 
-        <button type="submit" class="btn btn-success w-100">پرداخت و ثبت سفارش</button>
-    </form>
+    <!-- شماره تلفن -->
+    <div class="mb-3">
+        <label class="form-label text-white" for="phone-number">شماره تلفن:</label>
+        <div class="d-flex">
+            <input type="text" name="phone" class="form-control bg-dark text-white border-secondary me-2 w-75"
+                   value="{{ request.user.phone }}" readonly id="phone-number">
+        </div>
+    </div>
+
+    <!-- آدرس -->
+<div class="mb-3">
+    <label class="form-label text-white" for="address">آدرس:</label>
+    <textarea class="form-control bg-dark text-white border-secondary w-100"
+              name="address" id="address" rows="3" placeholder="آدرس خود را وارد کنید"></textarea>
+    <div id="address-error" class="error-message" style="display: none;">
+        <span>آدرس الزامی است.</span>
+        <span class="error-dot"></span>
+    </div>
 </div>
 
+
+    <!-- دکمه پرداخت -->
+    <button type="submit" class="btn btn-success w-100">پرداخت و ثبت سفارش</button>
+</form>
+
 <script>
-    document.getElementById('edit-phone').addEventListener('click', function () {
-        const phoneInput = document.getElementById('phone');
-        phoneInput.removeAttribute('readonly');
-        phoneInput.focus();
+    document.getElementById("order-form").addEventListener("submit", function(event) {
+        var address = document.getElementById("address").value.trim();  // گرفتن مقدار آدرس
+        var errorDiv = document.getElementById("address-error");
+
+        // اگر آدرس خالی بود، خطا را نمایش بده و ارسال فرم را متوقف کن
+        if (!address) {
+            event.preventDefault();  // جلوگیری از ارسال فرم
+            errorDiv.style.display = "block";  // نمایش پیام خطا
+        } else {
+            errorDiv.style.display = "none";  // مخفی کردن پیام خطا در صورت پر بودن آدرس
+        }
     });
 </script>
+
+<!-- استایل‌های CSS برای پیام خطا -->
+<style>
+.error-message {
+    color: #f8d7da;
+    padding: 10px;
+    font-size: 14px;
+    text-align: right;
+    margin-top: 10px;
+    animation: fadeIn 0.5s ease-in-out;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.error-dot {
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+
+    /* انیمیشن برای نمایان شدن پیام خطا */
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+</style>
+
+
+
+
+
+
+
+
+
+</div>
+    
+
+
+
+
 
     <div id="alert-messages" class="alert-container" style="width: 296px; text-align: center;">
     <!-- پیام‌ها به صورت داینامیک اضافه خواهند شد -->
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
     <script>
 
 
@@ -143,4 +240,5 @@ function showMessage(message) {
 
 
     </script>
+
 {% endblock %}

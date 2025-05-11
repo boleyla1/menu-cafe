@@ -1,11 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.conf import settings
 import requests
 import json
 from .cart import Cart
 from cart_app.models import *
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from accounts.models import User
 
@@ -15,13 +15,13 @@ class CartView(View):
         cart = Cart(request)
         product = cart.get_prods()
         quantities = cart.get_quants()  # دریافت مقدار تعداد محصول از سبد خرید
-        user = request.user.phone
+        user = User.objects.all()
 
         return render(request, 'cart_app/cart.html', {
             "product": product,
             "quantities": quantities,
             'cart': cart,
-            'user': user
+            'user': user,
 
         })
 
@@ -79,10 +79,60 @@ def cart_delete(request):
 
         })
         context = {
-            'user' : user
+            'user': user
         }
 
         return response
+
+
+class OrderView(View):
+    def get(self, request, id):
+        # دریافت سفارش براساس pk
+        order = Order.objects.get(id=id)
+
+        # ارسال اطلاعات به صفحه سفارش
+        return render(request, 'cart_app/order_add.html', {
+            'order': order
+        })
+
+
+class OrderCreation(View):
+    def get(self, request):
+        cart = Cart(request)
+        order = Order.objects.create(user=request.user, total_price=int(cart.total()))
+        for item in cart:
+            OrderItem.objects.create(order=order, product=item['product'], quantity=item['quantity'],
+                                     price=item['price'])
+        return redirect('order_view', order.id)
+
+    def post(self, request):
+        cart = Cart(request)
+
+        address = request.POST.get("address")
+        phone = request.POST.get("phone")
+
+        if not address:
+            return render(request, 'cart_app/cart.html', {
+                'error_message': 'آدرس الزامی است.'
+            })
+
+        order = Order.objects.create(
+            user=request.user,
+            total_price=int(cart.total()),
+            phone=phone,
+            address=address
+        )
+
+        for item in cart:
+            OrderItem.objects.create(
+                order=order,
+                product=item['product'],
+                quantity=item['quantity'],
+                price=item['price']
+            )
+
+        return redirect('order_view', order.id)
+
 
 ZP_API_REQUEST = 'https://api.zarinpal.com/pg/v4/payment/request.json'
 ZP_API_VERIFY = 'https://api.zarinpal.com/pg/v4/payment/verify.json'
