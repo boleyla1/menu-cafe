@@ -1,11 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.conf import settings
 import requests
 import json
+import requests
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+
 from .cart import Cart
 from cart_app.models import *
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 from accounts.models import User
 
@@ -134,41 +139,95 @@ class OrderCreation(View):
         return redirect('order_view', order.id)
 
 
-ZP_API_REQUEST = 'https://api.zarinpal.com/pg/v4/payment/request.json'
-ZP_API_VERIFY = 'https://api.zarinpal.com/pg/v4/payment/verify.json'
-ZP_API_STARTPAY = 'https://www.zarinpal.com/pg/StartPay/'
+MERCHANT = '9f22ca55-acd7-4b10-89f1-de1ea03d6e04'
 
-amount = 1000  # Rial / Required
+ZP_API_REQUEST = "https://api.zarinpal.com/pg/v4/payment/request.json"
+ZP_API_VERIFY = f"https://api.zarinpal.com/pg/v4/payment/verify.json"
+ZP_API_STARTPAY = "https://www.zarinpal.com/pg/StartPay/{}"
+
 description = "توضیحات مربوط به تراکنش را در این قسمت وارد کنید"  # Required
-phone = 'YOUR_PHONE_NUMBER'  # Optional
-# Important: need to edit for realy server.
-CallbackURL = 'http://127.0.0.1:8080/verify/'
+callback_url = "http://127.0.0.1:8000/cart/payment/verify/"
 
 
-def send_request(request):
-    data = {
-        "MerchantID": settings.MERCHANT,
-        "Amount": amount,
-        "Description": description,
-        "Phone": phone,
-        "CallbackURL": CallbackURL,
-    }
-    data = json.dumps(data)
-    # set content length by data
-    headers = {'content-type': 'application/json', 'content-length': str(len(data))}
-    try:
-        response = requests.post(ZP_API_REQUEST, data=data, headers=headers, timeout=10)
+class send_request(View):
+    def get(self, request, pk):
+        # پیدا کردن سفارش بر اساس شناسه (pk)
+        order = get_object_or_404(Order, id=pk, user=request.user)
+        request.session['order_id'] = str(order.id)
 
-        if response.status_code == 200:
-            response = response.json()
-            if response['Status'] == 100:
-                return {'status': True, 'url': ZP_API_STARTPAY + str(response['Authority']),
-                        'authority': response['Authority']}
+        # تبدیل مبلغ به ریال
+
+        # داده‌ها برای درخواست به زرین‌پال
+        data = {
+            "merchant_id": settings.MERCHANT,
+            "amount": order.total_price,  # از مبلغ سفارش استفاده کنید
+            "currency": "IRT",
+            "callback_url": callback_url,  # آدرس برگشت
+            "description": description,  # توضیحات
+            "metadata": {
+                "mobile": order.user.phone  # شماره تلفن کاربر
+            }
+        }
+        print("در حال ارسال داده به زرین‌پال:")
+        print(json.dumps(data, indent=2))
+
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json"
+        }
+
+        print("در حال ارسال داده به زرین‌پال:")
+        print(json.dumps(data, indent=2))
+
+        response = requests.post(
+            ZP_API_REQUEST,
+            data=json.dumps(data),
+            headers=headers
+        )
+
+        print("کد وضعیت پاسخ:", response.status_code)
+        print("متن پاسخ:", response.text)
+
+        res_data = response.json()
+
+        if "data" in res_data and "authority" in res_data["data"]:
+            authority = res_data["data"]["authority"]
+            return redirect(f"https://www.zarinpal.com/pg/StartPay/{authority}")
+        else:
+            error_message = res_data.get("errors", {}).get("message", "خطای نامشخص")
+            return HttpResponse(f"خطا: {error_message}")
+
+
+class verify_payment(View):
+    def get(self, request):
+        t_authority = request.GET.get("Authority")
+        t_status = request.GET.get("Status")
+        order_id = request.session['order_id']
+        order = Order.objects.get(id=int(order_id))
+        if request.GET.get('Status') == 'OK':
+            req_header = {
+                "accept": "application/json",
+                "content-type": "application/json"
+            }
+            req_data = {
+                "merchant_id": settings.MERCHANT,
+                'amount': order.total_price,
+                "authority": t_authority,
+            }
+            req = requests.post(url=ZP_API_VERIFY,data=json.dumps(req_data), headers=req_header)
+            if len(req.json()["errors"]) == 0:
+                t_status = req.json()["data"]["code"]
+                if t_status == 100:
+                    order.is_paid = True
+                    order.save()
+                    return redirect('cart')
+                elif t_status == 101:
+                    return HttpResponse('tranction subbmited')
+                else:
+                    return HttpResponse('faild')
             else:
-                return {'status': False, 'code': str(response['Status'])}
-        return response
-
-    except requests.exceptions.Timeout:
-        return {'status': False, 'code': 'timeout'}
-    except requests.exceptions.ConnectionError:
-        return {'status': False, 'code': 'connection error'}
+                e_code = req.json()["errors"]["code"]
+                e_msg = req.json()["errors"]["message"]
+                return HttpResponse(f'{e_code}: {e_msg}')
+        else:
+            return HttpResponse('cancled')

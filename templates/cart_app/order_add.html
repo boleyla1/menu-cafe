@@ -27,9 +27,13 @@
         {% endfor %}
     </ul>
 
-    <div class="d-flex justify-content-between">
-        <a href="{% url 'cart' %}" class="btn btn-outline-light">بازگشت به سبد خرید</a>
-        <a  class="btn btn-success">پرداخت</a>
-    </div>
+    <!-- فرم پرداخت -->
+
+
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'cart' %}" class="btn btn-outline-light">بازگشت به سبد خرید</a>
+            <a href="{% url 'send_request' order.id %}" class="btn btn-success">پرداخت</a>
+        </div>
+
 </div>
 {% endblock %}

@@ -3,15 +3,6 @@ from accounts.models import User
 from cafe_app.models import Product
 
 
-# class Address(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses")
-#     address = models.TextField()
-#     is_default = models.BooleanField(default=False)
-#
-#     def __str__(self):
-#         return self.address
-
-
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
     address = models.CharField(max_length=1000, blank=False, null=False)
@@ -25,8 +16,8 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE,related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='items')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
     quantity = models.SmallIntegerField()
     price = models.PositiveIntegerField()
 
